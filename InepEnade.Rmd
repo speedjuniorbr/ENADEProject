@@ -1,0 +1,767 @@
+---
+title: "Brazilian High Education General Perspective"
+author: "Expedito Pinto de Paula Junior"
+date: "8/10/2020"
+output: 
+     html_document:
+          toc: true
+          toc_float: true
+     
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1.Context
+
+The [INEP](https://www.gov.br/inep/pt-br/acesso-a-informacao/institucional) is brazilian institute for education reasearch in Ministry of Education. Some of the competences of INEP are:
+
+* Subsidize the public authorities in the monitoring and evaluation of the National Education System.
+* Support policy planning to guarantee the right to quality education for each and every one.
+* Propose and define performance parameters, criteria and mechanisms for the evaluation of education systems at all levels and modalities, as well as for the skills certification processes, in conjunction with the education systems of the states, the Federal District and the municipalities.
+* Others...
+
+Every year, INEP perform the National Student Performance Exam ([ENADE](http://inep.gov.br/enade)) in order to evaluates the performance of graduates of undergraduate courses in relation to the syllabus provided in the curricular guidelines of the courses, the development of competences and skills necessary to deepen general and professional training, and the level of updating of students in relation to the Brazilian and world reality.
+
+In INEP Web site are available several datasets denomitate "[The INEP Microdata](http://inep.gov.br/web/guest/microdados)", these datasets constitute the lowest level of disaggregation of data collected by surveys, evaluations and examinations.
+
+Each edition (year) of the evaluation has focus in different fields of study. More information about it are available in "[Exame Nacional de Desempenho de Estudantes](https://pt.wikipedia.org/wiki/Exame_Nacional_de_Desempenho_de_Estudantes)"
+
+
+# 2.Synopsis
+
+Using Exploratory Data Analysis method this analysis explore the [The INEP Microdata](http://inep.gov.br/web/guest/microdados) and address some basic questions about the National Student Performance Exam in the last 10 years:
+
+* 1. Is higher education in Brazil improving?
+* 2. Where Brazil have the best number in education? per área and also per courses.
+* 3. In relation to the past generation, is higher education improving?
+* 4. In what modalities of higher education is Brazil improving?
+* 5. Which courses in which college are best rated?
+
+# 3.Data Processing
+
+## 3.1 Prerequisite libraries
+
+```{r libraries}
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(dplyr)
+library(arsenal)
+library(readxl)
+```
+
+## 3.2 Data Loading
+
+The last 10 years available in [The INEP Microdata](http://inep.gov.br/web/guest/microdados) are from 2008 to 2018.
+
+```{r enadeLoad}
+
+# !WARNING! Large Data - must wait to finish all downloads.
+# Download files from web
+fileUrl2008 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2008.zip"
+if(!file.exists("./data/microdados_enade_2008.zip")){
+     download.file(fileUrl2008, destfile = "./data/microdados_enade_2008.zip")
+}
+
+fileUrl2009 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2009.zip"
+if(!file.exists("./data/microdados_enade_2009.zip")){
+     download.file(fileUrl2009, destfile = "./data/microdados_enade_2009.zip")
+}
+
+fileUrl2010 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2010.zip"
+if(!file.exists("./data/microdados_enade_2010.zip")){
+     download.file(fileUrl2010, destfile = "./data/microdados_enade_2010.zip")
+}
+
+fileUrl2011 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2011.zip"
+if(!file.exists("./data/microdados_enade_2011.zip")){
+     download.file(fileUrl2011, destfile = "./data/microdados_enade_2011.zip")
+}
+
+fileUrl2012 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2012.zip"
+if(!file.exists("./data/microdados_enade_2012.zip")){
+     download.file(fileUrl2011, destfile = "./data/microdados_enade_2012.zip")
+}
+
+fileUrl2013 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2013.zip"
+if(!file.exists("./data/microdados_enade_2013.zip")){
+     download.file(fileUrl2013, destfile = "./data/microdados_enade_2013.zip")
+}
+
+fileUrl2014 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2014.zip"
+if(!file.exists("./data/microdados_enade_2014.zip")){
+     download.file(fileUrl2014, destfile = "./data/microdados_enade_2014.zip")
+}
+
+fileUrl2015 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2015.zip"
+if(!file.exists("./data/microdados_enade_2015.zip")){
+     download.file(fileUrl2015, destfile = "./data/microdados_enade_2015.zip")
+}
+
+fileUrl2016 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2016_versao_28052018.zip"
+if(!file.exists("./data/microdados_enade_2016_versao_28052018.zip")){
+     download.file(fileUrl2016, destfile = "./data/microdados_enade_2016_versao_28052018.zip")
+}
+
+fileUrl2017 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_Enade_2017_portal_2018.10.09.zip"
+if(!file.exists("./data/microdados_Enade_2017_portal_2018.10.09.zip")){
+     download.file(fileUrl2017, destfile = "./data/microdados_Enade_2017_portal_2018.10.09.zip")
+}
+
+fileUrl2018 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2018.zip"
+if(!file.exists("./data/microdados_enade_2018.zip")){
+     download.file(fileUrl2018, destfile = "./data/microdados_enade_2018.zip")
+}
+
+CourseCode <- "http://download.inep.gov.br/informacoes_estatisticas/legislacao/2017/tabela_de_cursos.xls"
+if(!file.exists("./data/tabela_de_curso.xls")){
+     download.file(CourseCode, destfile = "./data/tabela_de_curso.xls")
+}
+
+# Load data from files
+if(!exists("tblCursos")){
+        tblCursos <- read_xls("./data/tabela_de_curso.xls")
+}
+if(!exists("mData2008")){
+        mData2008 <- read.csv(unz("./data/microdados_enade_2008.zip", "2.DADOS/microdados_enade_2008.csv"), header = TRUE, sep = ";")
+}
+if(!exists("mData2009")){
+        mData2009 <- read.csv(unz("./data/microdados_enade_2009.zip", "2.DADOS/microdados_enade_2009.csv"), header = TRUE, sep = ";")
+}
+
+# Change read pattern
+if(!exists("mData2010")){
+        mData2010 <- read.csv(unz("./data/microdados_enade_2010.zip", "3.DADOS/MICRODADOS_ENADE_2010.txt"), header = TRUE, sep = ";")
+}
+
+if(!exists("mData2011")){
+        mData2011 <- read.csv(unz("./data/microdados_enade_2011.zip", "3.DADOS/MICRODADOS_ENADE_2011.txt"), header = TRUE, sep = ";")
+}
+
+# The file name is correct according with the download zip file from ENADE Website. 
+if(!exists("mData2012")){
+        mData2012 <- read.csv(unz("./data/microdados_enade_2012.zip", "3.DADOS/MICRODADOS_ENADE_2011.txt"), header = TRUE, sep = ";")
+}
+
+if(!exists("mData2013")){
+        mData2013 <- read.csv(unz("./data/microdados_enade_2013.zip", "3.DADOS/MICRODADOS_ENADE_2013.txt"), header = TRUE, sep = ";")
+}
+
+if(!exists("mData2014")){
+        mData2014 <- read.csv(unz("./data/microdados_enade_2014.zip", "3.DADOS/MICRODADOS_ENADE_2014.txt"), header = TRUE, sep = ";")
+}
+
+if(!exists("mData2015")){
+        mData2015 <- read.csv(unz("./data/microdados_enade_2015.zip", "3.DADOS/MICRODADOS_ENADE_2015.txt"), header = TRUE, sep = ";")
+}
+
+if(!exists("mData2016")){
+        mData2016 <- read.csv(unz("./data/microdados_enade_2016_versao_28052018.zip", "microdados_enade2016/3.DADOS/MICRODADOS_ENADE_2016.txt"), header = TRUE, sep = ";")
+}
+
+if(!exists("mData2017")){
+        mData2017 <- read.csv(unz("./data/microdados_Enade_2017_portal_2018.10.09.zip", "3.DADOS/MICRODADOS_ENADE_2017.txt"), header = TRUE, sep = ";")
+}
+
+if(!exists("mData2018")){
+        mData2018 <- read.csv(unz("./data/microdados_enade_2018.zip", "2018/3.DADOS/microdados_enade_2018.txt"), header = TRUE, sep = ";")
+}
+```
+
+## 3.2 Identifing variables
+
+Once that data is loaded is possible to identify that each year the number of variables is different than others years. For our study based in the dataset and accordding with the documentation available, the set of variables to be used in this analysis are list bellow:
+
+```{r table1, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+# Variables Table 1
+tabl1 <- data.frame(
+        "Variables" = c("nu_ano","co_grupo","co_subarea","co_regiao_habil","co_uf_habil","nu_idade","tp_sexo","ano_fim_2g","ano_in_gra","QE_I13","QE_I14","nt_fg","nt_ce","nt_ger"),
+        "Description" = c("Year of testing","ENADE course code group","ENADE course code subgroup","Brazil region","Brazilian State","Student Age","Sex","High School Finish Year","Upper Graduation Start Year","Question: What is your father's education level?","Question: What is your father's education level?","Gross test score of general graduation","Gross test score of the specific component","Gross test score")
+)
+
+kable(tabl1) %>%
+        add_header_above(c("Table 1: Interest variables, datasets from 2008 to 2009" = 2)) %>%
+        kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+```
+
+From 2010 until 2016 the interest variables change according with list bellow:
+
+```{r table2, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+# Variables Table 2
+tabl2 <- data.frame(
+        "Variables" = c("NU_ANO","CO_GRUPO","CO_CURSO","CO_REGIAO_CURSO","CO_UF_CURSO","NU_IDADE","TP_SEXO","ANO_FIM_2G","ANO_IN_GRAD","QE_I13", "QE_I14", "NT_FG", "NT_CE", "NT_GER"),
+        "Description" = c("Year of testing","ENADE course code group","ENADE course code subgroup","Brazil region","Brazilian State","Student Age","Sex","High School Finish Year","Upper Graduation Start Year","Question: What is your father's education level?","Question: What is your father's education level?","Gross test score of general graduation","Gross test score of the specific component","Gross test score")
+)
+
+kable(tabl2) %>%
+        add_header_above(c("Table 2: Interest variables, datasets from 2010 to 2016" = 2)) %>%
+        kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+
+```
+
+From 2017 until 2018 the interest variables change according with list bellow:
+
+```{r table3, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+# Variables Table 3
+tabl3 <- data.frame(
+        "Variables" = c("NU_ANO","CO_GRUPO","CO_CURSO","CO_REGIAO_CURSO","CO_UF_CURSO","NU_IDADE","TP_SEXO","ANO_FIM_EM","ANO_IN_GRAD","QE_I13","QE_I14","NT_FG","NT_CE","NT_GER"),
+        "Description" = c("Year of testing","ENADE course code group","ENADE course code subgroup","Brazil region","Brazilian State","Student Age","Sex","High School Finish Year","Upper Graduation Start Year","Question: What is your father's education level?","Question: What is your father's education level?","Gross test score of general graduation","Gross test score of the specific component","Gross test score")
+)
+
+kable(tabl3) %>%
+        add_header_above(c("Table 3: Interest variables, datasets from 2017 to 2018" = 2)) %>%
+        kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+```
+
+
+## 3.3 Extracting data subset and converge variable names
+
+Based in the difference from the two previous tables, we are going two extract the varialbles from the datasets and convert to variable names from 2010 to 2018. Other important point to analysis is create a unique dataset for all years.
+
+### 3.3.1 Identifying possible filters parameters.
+
+According with the dataset documentation, some parameters must be considering in filter in order to have cleaning data for analysis. These parameters are related to the presence of the student in the Tests. For this analysis is considering presence in all tests. These paramenters are showed bellow:
+
+```{r table4, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+# Filter Variables Table 4
+tabl4 <- data.frame(
+        "Variables" = c("tp_pres/TP_PRES","tp_pr_ger/TP_PR_GER","tp_pr_ob_fg/TP_PR_OB_FG","tp_pr_di_fg/TP_PR_DI_FG","tp_pr_ob_ce/TP_PR_OB_CE"), 
+        "Description" = c("Presence Type","Presence Type In Test","Presence Type In Test for General Formation in Objective part","Presence Type In Test for General Formation in Discursive part","Presence Type In Test for Specific Component in Objective part"),
+        "Value" = c("555 = Present", "555 = OK", "555 = OK", "555 = OK", "555 = OK")
+)
+
+kable(tabl4) %>%
+        add_header_above(c("Table 4: Filters from 2008 to 2018" = 3)) %>%
+        kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+
+```
+
+### 3.3.2 Subset data
+
+In this section the data will be filtered according to table 3 for all datasets. Then, only the variables of interest are selected by normalizing the variable names and including all datasets in a single dataset.
+
+```{r CleaningData}
+# Filter and get interest variables
+mData2008Filter <- subset(mData2008, tp_pres == 555 | tp_pr_ger == 555 | tp_pr_ob_fg == 555 | tp_pr_di_fg == 555 | tp_pr_ob_ce == 555, select = c(nu_ano,co_grupo,co_subarea,co_regiao_habil,co_uf_habil,nu_idade,tp_sexo,ano_fim_2g,ano_in_gra,QE_I13,QE_I14,nt_fg,nt_ce,nt_ger))
+mData2009Filter <- subset(mData2009, tp_pres == 555 | tp_pr_ger == 555 | tp_pr_ob_fg == 555 | tp_pr_di_fg == 555 | tp_pr_ob_ce == 555, select = c(nu_ano,co_grupo,co_subarea,co_regiao_habil,co_uf_habil,nu_idade,tp_sexo,ano_fim_2g,ano_in_gra,QE_I13,QE_I14,nt_fg,nt_ce,nt_ger))
+mData2010Filter <- subset(mData2010, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO,CO_GRUPO,CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_2G, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+mData2011Filter <- subset(mData2011, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO,CO_GRUPO,CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_2G, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+mData2012Filter <- subset(mData2012, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO,CO_GRUPO,CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_2G, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+mData2013Filter <- subset(mData2013, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO,CO_GRUPO,CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_2G, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+mData2014Filter <- subset(mData2014, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO,CO_GRUPO,CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_2G, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+mData2015Filter <- subset(mData2015, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO,CO_GRUPO,CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_2G, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+mData2016Filter <- subset(mData2016, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO,CO_GRUPO,CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_2G, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+mData2017Filter <- subset(mData2017, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO,CO_GRUPO,CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_EM, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+mData2018Filter <- subset(mData2018, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO,CO_GRUPO,CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_EM, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+
+# Binding rows for a UNIQUE DataSet
+mData <- rbind(mData2008Filter, mData2009Filter)
+
+#Change variable names according with year variables change from dataset (2010 to 2016)
+colnames(mData) <- c("NU_ANO","CO_GRUPO","CO_CURSO","CO_REGIAO_CURSO","CO_UF_CURSO","NU_IDADE","TP_SEXO","ANO_FIM_2G","ANO_IN_GRAD","QE_I13", "QE_I14", "NT_FG", "NT_CE", "NT_GER")
+mData <- rbind(mData, mData2010Filter)
+mData <- rbind(mData, mData2011Filter)
+mData <- rbind(mData, mData2012Filter)
+mData <- rbind(mData, mData2013Filter)
+mData <- rbind(mData, mData2014Filter)
+mData <- rbind(mData, mData2015Filter)
+mData <- rbind(mData, mData2016Filter)
+
+#Change variable names according with year variables change from dataset (2017 to 2018)
+colnames(mData) <- c("NU_ANO","CO_GRUPO","CO_CURSO","CO_REGIAO_CURSO","CO_UF_CURSO","NU_IDADE","TP_SEXO","ANO_FIM_EM","ANO_IN_GRAD","QE_I13","QE_I14","NT_FG","NT_CE","NT_GER")
+mData <- rbind(mData, mData2017Filter)
+mData <- rbind(mData, mData2018Filter)
+
+### Adjust Data to be plot ###
+mData$NU_ANO <- as.factor(mData$NU_ANO)
+mData$CO_REGIAO_CURSO <- as.factor(mData$CO_REGIAO_CURSO)
+mData$NT_FG <- as.numeric(sub(",", ".", mData$NT_FG, fixed = TRUE))
+mData$NT_CE <- as.numeric(sub(",", ".", mData$NT_CE, fixed = TRUE))
+mData$NT_GER <- as.numeric(sub(",", ".", mData$NT_GER, fixed = TRUE))
+
+colnames(tblCursos) <- c("CO_CURSO", "NOME", "CLASSIFICACAO", "NIVEL_ACADEMICO", "MODALIDADE", "GRAU_ACADEMICO")
+
+```
+
+# 4.Results
+
+This section presents the results based on the questions that this analysis aims to answer on aspects of higher education in Brazil.
+
+## 4.1 Is higher education in Brazil improving?
+
+To address this question, the analysis must show if the Gross test score of general graduation (NT_FG), Gross test score of the specific component (NT_CE) and Gross test score (NT_GER) are improving or not across the years.
+
+### 4.1.1. Gross test score of general graduation
+
+```{r HighEducationImproving1, echo=FALSE}
+ggplot(mData, aes(x=NU_ANO, y=NT_FG)) + geom_boxplot() + geom_smooth(method = "lm", se=TRUE, aes(group=1)) + labs(x="Year") + labs(y="Score") + labs(title="Plot 1: Gross test score of general graduation in ENADE 2008 - 2018") 
+```
+
+### 4.1.2. Gross test score of the specific component
+
+```{r HighEducationImproving2, echo=FALSE}
+ggplot(mData, aes(x=NU_ANO, y=NT_CE)) + geom_boxplot() + geom_smooth(method = "lm", se=TRUE, aes(group=1)) + labs(x="Year") + labs(y="Score") + labs(title="Plot 2: Gross test score of specific component in ENADE 2008 - 2018") 
+```
+
+### 4.1.3. Gross test score (overall scores)
+
+```{r HighEducationImproving3, echo=FALSE}
+ggplot(mData, aes(x=NU_ANO, y=NT_GER)) + geom_boxplot() + geom_smooth(method = "lm", se=TRUE, aes(group=1)) + labs(x="Year") + labs(y="Score") + labs(title="Plot 3: Gross test score (overall scores) in ENADE 2008 - 2018") 
+```
+
+### 4.1.4. General Notes
+
+After plotting the graphs we can see that:
+
+2012 is not present in the graph. Observing the datasets 2011 and 2012 it was identified that both datasets are related to 2011. Until the date of this publication it was impossible to identify in INEP website the dataset related to 2012.  
+
+```{r summary2011and2012}
+summary(comparedf(mData2011, mData2012))
+```
+
+The overall grades has been improved year by year for all grades category. 
+
+```{r improvetax, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+
+# Improve tax for NT_FG
+nt_fg_dt <- subset(mData, !is.na(mData$NT_FG))
+nt_fg_year <- tapply(nt_fg_dt$NT_FG, nt_fg_dt$NU_ANO, mean)
+nt_fg_tax <- (lead(nt_fg_year)/nt_fg_year - 1)
+
+# Improve tax for NT_CE
+nt_ce_dt <- subset(mData, !is.na(mData$NT_CE))
+nt_ce_year <- tapply(nt_ce_dt$NT_FG, nt_ce_dt$NU_ANO, mean)
+nt_ce_tax <- (lead(nt_ce_year)/nt_ce_year - 1)
+
+# Improve tax for NT_GER
+nt_ger_dt <- subset(mData, !is.na(mData$NT_GER))
+nt_ger_year <- tapply(nt_ger_dt$NT_FG, nt_ger_dt$NU_ANO, mean)
+nt_ger_tax <- (lead(nt_ger_year)/nt_ger_year - 1)
+
+# Variables Table 5
+tabl5 <- data.frame(
+        "Variables" = c("NT_FG","NT_CE","NT_GER"),
+        "Description" = c("Gross test score of general graduation","Gross test score of the specific component","Gross test score"),
+        "Tax [%]" = c(sum(nt_fg_tax[1:9]*100), sum(nt_ce_tax[1:9]*100), sum(nt_ger_tax[1:9]*100)))
+
+
+kable(tabl5) %>%
+        add_header_above(c("Table 5: Improving Taxs" = 3)) %>%
+       kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+
+```
+
+## 4.2 Where Brazil have the best number in education? per region and per courses in each region
+
+### 4.2.1 Per Region
+
+To address this question, the analysis must show the best grades for each region in Brazil and for the best region get the best 10 courses and universities for all entire country. Also will be listed the best 10 courses and univertities per region.
+
+The table bellow, shows regions codes in Brazil and states.
+
+```{r regionsTable, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+# Regions Table 6
+tabl6 <- data.frame(
+        "Id" = c("1","2","3","4","5"),
+        "Region" = c("North","Northeast","Southeast","South","Midwest"),
+        "States" = c("Rondônia, Acre, Amazonas, Roraima, Pará, Amapa, Tocantins","Maranhão, Piauí, Ceará, Rio Grande do Norte, Paraíba, Pernambuco, Alagoas, Sergipe, Bahia","Minas Gerais, Espirito Santo, Rio de Janeiro, São Paulo","Paraná, Santa Catarina, Rio Grande do Sul","Mato Grosso do Sul, Mato Grosso, Goiás, Distrito Federal"))
+
+kable(tabl6) %>%
+        add_header_above(c("Table 6: Brazil Regions" = 3)) %>%
+       kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+```
+
+To address this question, the analysis must show if the Gross test score of general graduation (NT_FG), Gross test score of the specific component (NT_CE) and Gross test score (NT_GER) for each region in Brazil.
+
+#### 4.2.1.1 Gross test score of general graduation per Region
+
+```{r RegionsPlot1, echo=FALSE}
+ggplot(mData, aes(x=CO_REGIAO_CURSO, y=NT_FG)) + geom_boxplot() +  labs(x="Year") + labs(y="Score") + labs(title="Plot 4: Gross test score of general graduation per region in ENADE 2008 - 2018") 
+```
+
+#### 4.2.1.2. Gross test score of the specific component per Region
+
+```{r RegionsPlot2, echo=FALSE}
+ggplot(mData, aes(x=CO_REGIAO_CURSO, y=NT_CE)) + geom_boxplot() +  labs(x="Year") + labs(y="Score") + labs(title="Plot 5: Gross test score of specific component per region in ENADE 2008 - 2018") 
+```
+
+#### 4.2.1.3. Gross test score (overall scores) per Region
+
+```{r RegionsPlot3, echo=FALSE}
+ggplot(mData, aes(x=CO_REGIAO_CURSO, y=NT_GER)) + geom_boxplot() +  labs(x="Year") + labs(y="Score") + labs(title="Plot 6: Gross test score (overall scores) per region in ENADE 2008 - 2018") 
+```
+
+#### 4.2.1.4. General Notes per region
+
+According with tables bellow the best mean grade are in region 4 and 3 followed by region 2 in brazil from 2008 to 2018 for the gross test score (overall scores), gross test score for specific component and gross test score of general graduation.
+
+
+```{r RegionsTables}
+rt_nt_ger <- tapply(mData$NT_GER, mData$CO_REGIAO_CURSO, mean, na.rm = TRUE)
+rt_nt_ce <- tapply(mData$NT_CE, mData$CO_REGIAO_CURSO, mean, na.rm = TRUE)
+rt_nt_fg <- tapply(mData$NT_FG, mData$CO_REGIAO_CURSO, mean, na.rm = TRUE)
+
+tbl7 <- data.frame("Id" = c("1","2","3","4","5"),rt_nt_ger, rt_nt_ce, rt_nt_fg)
+
+colnames(tbl7) <- c("Region", "NT_GER", "NT_CE", "NT_FG")
+
+kable(tbl7) %>%
+        add_header_above(c("Table 7: Average grades by Region in Brazil" = 4)) %>%
+       kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+
+```
+
+### 4.2.2 Per Courses each region.
+
+This section will address questions about the best upper graduation course in each region of Brazil. Historically each region has best courses in some fields of study then others. Based on those courses is possible to identify the power of the region in different subjects.
+
+```{r CoursePerRegionLoad}
+
+# Get a subset to be analyse
+mDataRegion <- data.frame(mData$CO_REGIAO_CURSO, mData$CO_CURSO, mData$NT_GER, mData$NT_FG, mData$NT_CE)
+colnames(mDataRegion) <- c("CO_REGIAO_CURSO", "CO_CURSO", "NT_GER", "NT_FG", "NT_CE")
+
+# Define factors
+mDataRegion$CO_CURSO <- as.numeric(mDataRegion$CO_CURSO)
+mDataRegion$CO_CURSO <- as.factor(mDataRegion$CO_CURSO)
+mDataRegion$CO_REGIAO_CURSO <- as.factor(mDataRegion$CO_REGIAO_CURSO)
+
+```
+
+#### 4.2.2.1 Region 1 - North
+
+The top 15 Upper graduation course in region 1 for all grade are showed bellow:
+
+```{r reg1}
+# Get subset analysis for region
+r1 <- subset(mDataRegion, CO_REGIAO_CURSO == 1, na.rm = TRUE)
+
+# Calculate mean per courses
+r1NT_GER <- aggregate(r1$NT_GER, list(r1$CO_CURSO), mean, na.rm = TRUE)
+r1NT_FG <- aggregate(r1$NT_FG, list(r1$CO_CURSO), mean, na.rm = TRUE)
+r1NT_CE <- aggregate(r1$NT_CE, list(r1$CO_CURSO), mean, na.rm = TRUE)
+
+# Merge analysis
+r1Data <- merge(r1NT_GER, r1NT_FG, "Group.1")
+r1Data <- merge(r1Data, r1NT_CE, "Group.1")
+colnames(r1Data) <- c("CO_CURSO", "NT_GER", "NT_FG", "NT_CE")
+
+# Add total grades and order desc
+r1Data$TOTAL <- r1Data$NT_GER + r1Data$NT_FG + r1Data$NT_CE
+r1Data <- r1Data[order(-r1Data$TOTAL),]
+
+# Plot top 15 best upper graduation course per region
+
+# Get data to plot Top 15
+plotData1 <- r1Data[1:15,]
+plotData1 <- merge(plotData1, tblCursos, "CO_CURSO")
+
+#Plot data
+ggplot(plotData1, aes(x=reorder(CO_CURSO, -TOTAL), y=TOTAL)) + geom_bar(stat="identity", fill="forest green") + geom_bar(stat="identity") + theme(axis.text.x = element_text(angle = 90, vjust = 0.4, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("Plot 7: Best Upper Graduation Courses in Region 1") + xlab("Course") + ylab("Total all Grades (sum)")
+
+```
+
+Each course has a number that has been identified according with INEP. Bellow has the code table for each best 15 upper graduation course in region 1.
+
+```{r reg1Table}
+
+#Prepare for print table
+tblPlotData1 <- data.frame(plotData1$CO_CURSO, plotData1$TOTAL, plotData1$NOME, plotData1$NIVEL_ACADEMICO, plotData1$MODALIDADE, plotData1$GRAU_ACADEMICO)
+
+#Rename Columns
+colnames(tblPlotData1) <- c("COURSE_COD", "ALL_SCORE", "COURSE", "LEVEL", "MOD", "ACADEMIC_LEVEL")
+
+#Order by Score
+tblPlotData1 <- tblPlotData1[order(-tblPlotData1$ALL_SCORE),]
+
+#Print Table
+kable(tblPlotData1) %>%
+         add_header_above(c("Table X: Best Upper Graduation Courses in Region 1" = 7)) %>%
+       kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+
+```
+
+
+#### 4.2.2.2 Region 2 - Northeast
+
+The top 15 Upper graduation course in region 2 for all grade are showed bellow:
+
+```{r reg2}
+# Get subset analysis for region
+r2 <- subset(mDataRegion, CO_REGIAO_CURSO == 2, na.rm = TRUE)
+
+# Calculate mean per courses
+r2NT_GER <- aggregate(r2$NT_GER, list(r2$CO_CURSO), mean, na.rm = TRUE)
+r2NT_FG <- aggregate(r2$NT_FG, list(r2$CO_CURSO), mean, na.rm = TRUE)
+r2NT_CE <- aggregate(r2$NT_CE, list(r2$CO_CURSO), mean, na.rm = TRUE)
+
+# Merge analysis
+r2Data <- merge(r2NT_GER, r2NT_FG, "Group.1")
+r2Data <- merge(r2Data, r2NT_CE, "Group.1")
+colnames(r2Data) <- c("CO_CURSO", "NT_GER", "NT_FG", "NT_CE")
+
+# Add total grades and order desc
+r2Data$TOTAL <- r2Data$NT_GER + r2Data$NT_FG + r2Data$NT_CE
+r2Data <- r2Data[order(-r2Data$TOTAL),]
+
+# Plot top 15 best upper graduation course per region
+
+# Get data to plot Top 15
+plotData2 <- r2Data[1:15,]
+plotData2 <- merge(plotData2, tblCursos, "CO_CURSO")
+
+#Plot data
+ggplot(plotData2, aes(x=reorder(CO_CURSO, -TOTAL), y=TOTAL)) + geom_bar(stat="identity", fill="forest green") + geom_bar(stat="identity") + theme(axis.text.x = element_text(angle = 90, vjust = 0.4, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("Plot 8: Best Upper Graduation Courses in Region 2") + xlab("Course") + ylab("Total all Grades (sum)")
+
+```
+
+Each course has a number that has been identified according with INEP. Bellow has the code table for each best 15 upper graduation course in region 2.
+
+```{r reg2Table}
+
+tblPlotData2 <- data.frame(plotData2$CO_CURSO, plotData2$TOTAL, plotData2$NOME, plotData2$NIVEL_ACADEMICO, plotData2$MODALIDADE, plotData2$GRAU_ACADEMICO)
+
+colnames(tblPlotData2) <- c("COURSE_COD", "ALL_SCORE", "COURSE", "LEVEL", "MOD", "ACADEMIC_LEVEL")
+
+tblPlotData2 <- tblPlotData2[order(-tblPlotData2$ALL_SCORE),]
+
+kable(tblPlotData2) %>%
+        add_header_above(c("Table X: Best Upper Graduation Courses in Region 2" = 7)) %>%
+       kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+
+```
+
+#### 4.2.2.3 Region 3 - Southeast
+
+The top 15 Upper graduation course in region 3 for all grade are showed bellow:
+
+```{r reg3}
+# Get subset analysis for region
+r3 <- subset(mDataRegion, CO_REGIAO_CURSO == 3, na.rm = TRUE)
+
+# Calculate mean per courses
+r3NT_GER <- aggregate(r3$NT_GER, list(r3$CO_CURSO), mean, na.rm = TRUE)
+r3NT_FG <- aggregate(r3$NT_FG, list(r3$CO_CURSO), mean, na.rm = TRUE)
+r3NT_CE <- aggregate(r3$NT_CE, list(r3$CO_CURSO), mean, na.rm = TRUE)
+
+# Merge analysis
+r3Data <- merge(r3NT_GER, r3NT_FG, "Group.1")
+r3Data <- merge(r3Data, r3NT_CE, "Group.1")
+colnames(r3Data) <- c("CO_CURSO", "NT_GER", "NT_FG", "NT_CE")
+
+# Add total grades and order desc
+r3Data$TOTAL <- r3Data$NT_GER + r3Data$NT_FG + r3Data$NT_CE
+r3Data <- r3Data[order(-r3Data$TOTAL),]
+
+# Plot top 15 best upper graduation course per region
+
+# Get data to plot Top 15
+plotData3 <- r3Data[1:15,]
+plotData3 <- merge(plotData3, tblCursos, "CO_CURSO")
+
+#Plot data
+ggplot(plotData3, aes(x=reorder(CO_CURSO, -TOTAL), y=TOTAL)) + geom_bar(stat="identity", fill="forest green") + geom_bar(stat="identity") + theme(axis.text.x = element_text(angle = 90, vjust = 0.4, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("Plot 9: Best Upper Graduation Courses in Region 3") + xlab("Course") + ylab("Total all Grades (sum)")
+
+```
+
+Each course has a number that has been identified according with INEP. Bellow has the code table for each best 15 upper graduation course in region 3.
+
+```{r reg3Table}
+
+tblPlotData3 <- data.frame(plotData3$CO_CURSO, plotData3$TOTAL, plotData3$NOME, plotData3$NIVEL_ACADEMICO, plotData3$MODALIDADE, plotData3$GRAU_ACADEMICO)
+
+colnames(tblPlotData3) <- c("COURSE_COD", "ALL_SCORE", "COURSE", "LEVEL", "MOD", "ACADEMIC_LEVEL")
+
+
+tblPlotData3 <- tblPlotData3[order(-tblPlotData3$ALL_SCORE),]
+
+kable(tblPlotData3) %>%
+       add_header_above(c("Table X: Best Upper Graduation Courses in Region 3" = 7)) %>%
+       kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+
+```
+
+
+#### 4.2.2.4 Region 4 - South
+
+The top 15 Upper graduation course in region 4 for all grade are showed bellow:
+
+```{r reg4}
+# Get subset analysis for region
+r4 <- subset(mDataRegion, CO_REGIAO_CURSO == 4, na.rm = TRUE)
+
+# Calculate mean per courses
+r4NT_GER <- aggregate(r4$NT_GER, list(r4$CO_CURSO), mean, na.rm = TRUE)
+r4NT_FG <- aggregate(r4$NT_FG, list(r4$CO_CURSO), mean, na.rm = TRUE)
+r4NT_CE <- aggregate(r4$NT_CE, list(r4$CO_CURSO), mean, na.rm = TRUE)
+
+# Merge analysis
+r4Data <- merge(r4NT_GER, r4NT_FG, "Group.1")
+r4Data <- merge(r4Data, r4NT_CE, "Group.1")
+colnames(r4Data) <- c("CO_CURSO", "NT_GER", "NT_FG", "NT_CE")
+
+# Add total grades and order desc
+r4Data$TOTAL <- r4Data$NT_GER + r4Data$NT_FG + r4Data$NT_CE
+r4Data <- r4Data[order(-r4Data$TOTAL),]
+
+# Plot top 15 best upper graduation course per region
+
+# Get data to plot Top 15
+plotData4 <- r4Data[1:15,]
+plotData4 <- merge(plotData4, tblCursos, "CO_CURSO")
+
+#Plot data
+ggplot(plotData4, aes(x=reorder(CO_CURSO, -TOTAL), y=TOTAL)) + geom_bar(stat="identity", fill="forest green") + geom_bar(stat="identity") + theme(axis.text.x = element_text(angle = 90, vjust = 0.4, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("Plot 10: Best Upper Graduation Courses in Region 4") + xlab("Course") + ylab("Total all Grades (sum)")
+
+```
+
+Each course has a number that has been identified according with INEP. Bellow has the code table for each best 15 upper graduation course in region 4.
+
+
+```{r reg4Table}
+
+tblPlotData4 <- data.frame(plotData4$CO_CURSO, plotData4$TOTAL, plotData4$NOME, plotData4$NIVEL_ACADEMICO, plotData4$MODALIDADE, plotData4$GRAU_ACADEMICO)
+
+colnames(tblPlotData4) <- c("COURSE_COD", "ALL_SCORE", "COURSE", "LEVEL", "MOD", "ACADEMIC_LEVEL")
+
+
+tblPlotData4 <- tblPlotData4[order(-tblPlotData4$ALL_SCORE),]
+
+kable(tblPlotData4) %>%
+       add_header_above(c("Table X: Best Upper Graduation Courses in Region 4" = 7)) %>%
+       kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+
+```
+
+#### 4.2.2.4 Region 5 - Midwest
+
+The top 15 Upper graduation course in region 5 for all grade are showed bellow:
+
+```{r reg5}
+# Get subset analysis for region
+r5 <- subset(mDataRegion, CO_REGIAO_CURSO == 5, na.rm = TRUE)
+
+# Calculate mean per courses
+r5NT_GER <- aggregate(r5$NT_GER, list(r5$CO_CURSO), mean, na.rm = TRUE)
+r5NT_FG <- aggregate(r5$NT_FG, list(r5$CO_CURSO), mean, na.rm = TRUE)
+r5NT_CE <- aggregate(r5$NT_CE, list(r5$CO_CURSO), mean, na.rm = TRUE)
+
+# Merge analysis
+r5Data <- merge(r5NT_GER, r5NT_FG, "Group.1")
+r5Data <- merge(r5Data, r5NT_CE, "Group.1")
+colnames(r5Data) <- c("CO_CURSO", "NT_GER", "NT_FG", "NT_CE")
+
+# Add total grades and order desc
+r5Data$TOTAL <- r5Data$NT_GER + r5Data$NT_FG + r5Data$NT_CE
+r5Data <- r5Data[order(-r5Data$TOTAL),]
+
+# Plot top 15 best upper graduation course per region
+
+# Get data to plot Top 15
+plotData5 <- r5Data[1:15,]
+plotData5 <- merge(plotData5, tblCursos, "CO_CURSO")
+
+#Plot data
+ggplot(plotData5, aes(x=reorder(CO_CURSO, -TOTAL), y=TOTAL)) + geom_bar(stat="identity", fill="forest green") + geom_bar(stat="identity") + theme(axis.text.x = element_text(angle = 90, vjust = 0.4, hjust = 1), plot.title = element_text(hjust = 0.5)) + ggtitle("Plot 11: Best Upper Graduation Courses in Region 5") + xlab("Course") + ylab("Total all Grades (sum)")
+
+```
+
+Each course has a number that has been identified according with INEP. Bellow has the code table for each best 15 upper graduation course in region 5.
+
+```{r reg5Table}
+
+tblPlotData5 <- data.frame(plotData5$CO_CURSO, plotData5$TOTAL, plotData5$NOME, plotData5$NIVEL_ACADEMICO, plotData5$MODALIDADE, plotData5$GRAU_ACADEMICO)
+
+colnames(tblPlotData5) <- c("COURSE_COD", "ALL_SCORE", "COURSE", "LEVEL", "MOD", "ACADEMIC_LEVEL")
+
+
+tblPlotData5 <- tblPlotData5[order(-tblPlotData5$ALL_SCORE),]
+
+kable(tblPlotData5) %>%
+       add_header_above(c("Table X: Best Upper Graduation Courses in Region 5" = 7)) %>%
+       kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+
+```
+
+In section 4.5 will be analyze the which university in which region are the best rated.
+
+## 4.3 In relation to the past generation, is higher education improving?
+
+This section is the most central in this study because it addresses the relationship between the education level of the past generation compared to the current generation taking a course at Brazilian universities. Two questions in the dataset address the level of education of parents defined as:
+
+* ** A ** - None 
+* ** B ** - Fundamental School I 1 to 5 years
+* ** C ** - Fundamental School II 6 to 9 years
+* ** D ** - High School
+* ** E ** - Graduation
+* ** F ** - Upper-Graduation (including Specialization, MsC, PhD and others)
+
+The variables in the evaluation are identified by **QE_I13** and **QE_I14** with the followed questions:
+
+1. **QE_I13** - What is your father's education level?
+2. **QE_I14** - What is your mother's education level?
+
+For this specific study, it will only be identified if the current level is higher or lower than that of parents.
+
+### 4.3.1 Data Preparation
+
+This section will extract the required data from dataset for each year.
+
+```{r extPrevGenData}
+# Getting count from each year for each category level.
+tblFather <- table(mData$NU_ANO,mData$QE_I13, exclude = c("","-",".","*","_"))
+tblMother <- table(mData$NU_ANO,mData$QE_I14, exclude = c("","-",".","*","_"))
+
+dfFather <- data.frame(tblFather)
+dfMother <- data.frame(tblMother)
+
+colnames(dfFather) <- c("YEAR","LEVEL","TOTAL")
+colnames(dfMother) <- c("YEAR","LEVEL","TOTAL")
+```
+
+### 4.3.2 Generation Analyse
+
+Between 2008 to 2018 is present the current generation in Age that is object of this overview. This generation, by age, during this time are realizing the graduation course.
+
+```{r currentGeneration}
+ggplot(data = mData, aes(NU_IDADE)) + geom_histogram(breaks=seq(18, 65, by=2)) + facet_wrap(~NU_ANO) + ggtitle("Plot 12: Generation in University by Age and Year") + xlab("Year") + ylab("Count")
+```
+
+### 4.3.3 Analyse the previous generation
+
+Looking for the ** father ** respondents the follow plot shows the percentage of answers for each category.
+
+```{r previousGenFather}
+mDataFather <- subset(mData, QE_I13 == "A" | QE_I13 == "B" | QE_I13 == "C" | QE_I13 == "D" | QE_I13 == "E" | QE_I13 == "F", select = c(NU_ANO,CO_GRUPO,CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_EM, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+
+ggplot(mDataFather, aes(x=NU_ANO, fill=QE_I13)) + geom_bar(position = "fill") + scale_y_continuous(labels = scales::percent) + ggtitle("Plot 13: Father Scholarity Level") + xlab("Year") + ylab("Percentage (%)")
+
+```
+
+Looking for the ** mother ** respondents the follow plot shows the percentage of answers for each category.
+
+```{r previousGenMother}
+mDataMother <- subset(mData, QE_I14 == "A" | QE_I14 == "B" | QE_I14 == "C" | QE_I14 == "D" | QE_I14 == "E" | QE_I14 == "F", select = c(NU_ANO,CO_GRUPO,CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_EM, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+
+ggplot(mDataMother, aes(x=NU_ANO, fill=QE_I14)) + geom_bar(position = "fill") + scale_y_continuous(labels = scales::percent) + ggtitle("Plot 14: Mother Scholarity Level") + xlab("Year") + ylab("Percentage (%)")
+```
+
+## 4.4 In what modalities of higher education is Brazil improving?
+
+## 4.5. Which courses in which university are best rated?
+
+# 5.Conclusions
