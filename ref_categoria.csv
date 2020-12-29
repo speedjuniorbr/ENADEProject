@@ -1,0 +1,24 @@
+COD_CATEGAD;CATEGORIA
+1;Publica Federal
+2;Publica Estadual
+3;Publica Municipal
+4;Privada com fins lucrativos
+5;Privada sem fins lucrativos
+7;Especial
+93;Pessoa Juridica de Direito Publico - Federal 
+115;Pessoa Juridica de Direito Publico - Estadual
+116;Pessoa Juridica de Direito Publico - Municipal
+118;Pessoa Juridica de Direito Privado - Com fins lucrativos - Sociedade Civil
+120;Pessoa Juridica de Direito Privado - Sem fins lucrativos - Associacao de Utilidade Publica
+121;Pessoa Juridica de Direito Privado - Sem fins lucrativos - Fundacao
+10001;Pessoa Juridica de Direito Publico - Estadual
+10002;Pessoa Juridica de Direito Publico - Federal
+10003;Pessoa Juridica de Direito Publico - Municipal
+10004;Pessoa Juridica de Direito Privado - Com fins lucrativos - Associaco de Utilidade Publica
+10005;Privada com fins lucrativos
+10006;Pessoa Juridica de Direito Privado - Com fins lucrativos - Sociedade Mercantil ou Comercial
+10007;Pessoa Juridica de Direito Privado - Sem fins lucrativos - Associacao de Utilidade Publica
+10008;Privada sem fins lucrativos
+10009;Pessoa Juridica de Direito Privado - Sem fins lucrativos - Sociedade                                                                                   
+10036;Nao disponivel
+17634;Fundacao Publica de Direito Privado Municipal

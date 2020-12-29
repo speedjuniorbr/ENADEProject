@@ -1,0 +1,434 @@
+---
+title: "Brazilian High Education General Perspective - Part 1 - (Data Cleaning)"
+author: "Expedito Pinto de Paula Junior"
+contact: "[LinkedIn](https://www.linkedin.com/in/expedito-pinto-de-paula-junior-ab664a17/)"
+date: "29/12/2020"
+output: 
+   html_document:
+        toc: true
+        toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1.Context
+
+The [INEP](https://www.gov.br/inep/pt-br/acesso-a-informacao/institucional) is brazilian institute for education research in Ministry of Education. Some of the competences of INEP are:
+
+* Subsidize the public authorities in the monitoring and evaluation of the National Education System.
+* Support policy planning to guarantee the right to quality education for each and every one.
+* Propose and define performance parameters, criteria and mechanisms for the evaluation of education systems at all levels and modalities, as well as for the skills certification processes, in conjunction with the education systems of the states, the Federal District and the municipalities.
+* Others...
+
+Every year, INEP perform the National Student Performance Exam ([ENADE](http://inep.gov.br/enade)) in order to evaluates the performance of graduates of undergraduate courses in relation to the syllabus provided in the curricular guidelines of the courses, the development of competences and skills necessary to deepen general and professional training, and the level of updating of students in relation to the Brazilian and world reality.
+
+In INEP Web site are available several datasets denomitate "[The INEP Microdata](http://inep.gov.br/web/guest/microdados)", these datasets constitute the lowest level of disaggregation of data collected by surveys, evaluations and examinations.
+
+Each edition (year) of the evaluation has focus in different fields of study. More information about it are available in "[Exame Nacional de Desempenho de Estudantes](https://pt.wikipedia.org/wiki/Exame_Nacional_de_Desempenho_de_Estudantes)"
+
+
+# 2.Synopsis
+
+Using reproducible research approach and getting and data cleaning method, this document get a set of dataset`s from [The INEP Microdata](http://inep.gov.br/web/guest/microdados) and cleaning the data in order to address some basic questions about the National Student Performance Exam in the last 10 years: This document will extract, clean and create a subset data to address performance aspects across the years and also (if it is possible) across generation in Brazil.
+
+# 3. Getting Data and Cleaning
+
+## 3.1 Prerequisite libraries
+
+```{r libraries}
+library(ggplot2)
+library(knitr)
+library(readxl)
+library(dplyr)
+library(kableExtra)
+```
+
+## 3.2 Data Loading
+
+The following code download files and load it into variables for each year.
+
+```{r enadeLoad}
+
+# Create Data Directory if not exist
+if (!file.exists("data")){
+     dir.create("data")
+}
+
+
+# !WARNING! Large Data - must wait to finish all downloads.
+# Download files from web
+
+########
+# 2008
+########
+fileUrl2008 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2008.zip"
+if(!file.exists("./data/microdados_enade_2008.zip")){
+     download.file(fileUrl2008, destfile = "./data/microdados_enade_2008.zip")
+}
+if(!exists("mData2008")){
+        mData2008 <- read.csv(unz("./data/microdados_enade_2008.zip", "2.DADOS/microdados_enade_2008.csv"), header = TRUE, sep = ";")
+}
+
+########
+# 2009
+########
+fileUrl2009 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2009.zip"
+if(!file.exists("./data/microdados_enade_2009.zip")){
+     download.file(fileUrl2009, destfile = "./data/microdados_enade_2009.zip")
+}
+if(!exists("mData2009")){
+        mData2009 <- read.csv(unz("./data/microdados_enade_2009.zip", "2.DADOS/microdados_enade_2009.csv"), header = TRUE, sep = ";")
+}
+
+########
+# 2010
+########
+fileUrl2010 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2010.zip"
+if(!file.exists("./data/microdados_enade_2010.zip")){
+     download.file(fileUrl2010, destfile = "./data/microdados_enade_2010.zip")
+}
+if(!exists("mData2010")){
+        mData2010 <- read.csv(unz("./data/microdados_enade_2010.zip", "3.DADOS/MICRODADOS_ENADE_2010.txt"), header = TRUE, sep = ";")
+}
+
+########
+# 2011
+########
+fileUrl2011 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2011.zip"
+if(!file.exists("./data/microdados_enade_2011.zip")){
+     download.file(fileUrl2011, destfile = "./data/microdados_enade_2011.zip")
+}
+if(!exists("mData2011")){
+        mData2011 <- read.csv(unz("./data/microdados_enade_2011.zip", "3.DADOS/MICRODADOS_ENADE_2011.txt"), header = TRUE, sep = ";")
+}
+
+########
+# 2012
+########
+fileUrl2012 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2012.zip"
+if(!file.exists("./data/microdados_enade_2012.zip")){
+     download.file(fileUrl2011, destfile = "./data/microdados_enade_2012.zip")
+}
+if(!exists("mData2012")){
+        mData2012 <- read.csv(unz("./data/microdados_enade_2012.zip", "3.DADOS/MICRODADOS_ENADE_2011.txt"), header = TRUE, sep = ";")
+}
+
+########
+# 2013
+########
+fileUrl2013 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2013.zip"
+if(!file.exists("./data/microdados_enade_2013.zip")){
+     download.file(fileUrl2013, destfile = "./data/microdados_enade_2013.zip")
+}
+if(!exists("mData2013")){
+        mData2013 <- read.csv(unz("./data/microdados_enade_2013.zip", "3.DADOS/MICRODADOS_ENADE_2013.txt"), header = TRUE, sep = ";")
+}
+
+########
+# 2014
+########
+fileUrl2014 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2014.zip"
+if(!file.exists("./data/microdados_enade_2014.zip")){
+     download.file(fileUrl2014, destfile = "./data/microdados_enade_2014.zip")
+}
+if(!exists("mData2014")){
+        mData2014 <- read.csv(unz("./data/microdados_enade_2014.zip", "3.DADOS/MICRODADOS_ENADE_2014.txt"), header = TRUE, sep = ";")
+}
+
+########
+# 2015
+########
+fileUrl2015 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2015.zip"
+if(!file.exists("./data/microdados_enade_2015.zip")){
+     download.file(fileUrl2015, destfile = "./data/microdados_enade_2015.zip")
+}
+if(!exists("mData2015")){
+        mData2015 <- read.csv(unz("./data/microdados_enade_2015.zip", "3.DADOS/MICRODADOS_ENADE_2015.txt"), header = TRUE, sep = ";")
+}
+
+########
+# 2016
+########
+fileUrl2016 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2016_versao_28052018.zip"
+if(!file.exists("./data/microdados_enade_2016_versao_28052018.zip")){
+     download.file(fileUrl2016, destfile = "./data/microdados_enade_2016_versao_28052018.zip")
+}
+if(!exists("mData2016")){
+        mData2016 <- read.csv(unz("./data/microdados_enade_2016_versao_28052018.zip", "microdados_enade2016/3.DADOS/MICRODADOS_ENADE_2016.txt"), header = TRUE, sep = ";")
+}
+
+########
+# 2017
+########
+fileUrl2017 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_Enade_2017_portal_2018.10.09.zip"
+if(!file.exists("./data/microdados_Enade_2017_portal_2018.10.09.zip")){
+     download.file(fileUrl2017, destfile = "./data/microdados_Enade_2017_portal_2018.10.09.zip")
+}
+if(!exists("mData2017")){
+        mData2017 <- read.csv(unz("./data/microdados_Enade_2017_portal_2018.10.09.zip", "3.DADOS/MICRODADOS_ENADE_2017.txt"), header = TRUE, sep = ";")
+}
+
+########
+# 2018
+########
+fileUrl2018 <- "http://download.inep.gov.br/microdados/Enade_Microdados/microdados_enade_2018.zip"
+if(!file.exists("./data/microdados_enade_2018.zip")){
+     download.file(fileUrl2018, destfile = "./data/microdados_enade_2018.zip")
+}
+if(!exists("mData2018")){
+        mData2018 <- read.csv(unz("./data/microdados_enade_2018.zip", "2018/3.DADOS/microdados_enade_2018.txt"), header = TRUE, sep = ";")
+}
+```
+
+## 3.2 Identifying Variables
+
+Once that data is loaded is possible to identify that each year the number of variables is different than others years. This cleaning data process aims to provide a set of variables to address analysis trying to answer the following questions:
+
+* 1. Is higher education in Brazil improving?
+* 2. Where Brazil have the best number in education? per área and also per courses.
+* 3. In relation to the past generation, is higher education improving?
+* 4. In what modalities of higher education is Brazil improving?
+* 5. Which courses in which college are best rated?
+
+The chart bellow shows the different variables sizes for each year:
+
+```{r sizes}
+
+years <- c("2008","2009","2010","2011","2012","2013","2014","2015","2016","2017","2018")
+variables <- c(length(mData2008),length(mData2009),length(mData2010),length(mData2011),length(mData2012),length(mData2013),length(mData2014),length(mData2015),length(mData2016),length(mData2017),length(mData2018))
+observations <- c(nrow(mData2008),nrow(mData2009),nrow(mData2010),nrow(mData2011),nrow(mData2012),nrow(mData2013),nrow(mData2014),nrow(mData2015),nrow(mData2016),nrow(mData2017),nrow(mData2018))
+
+sizes <- data.frame(years,variables, observations)
+
+ggplot(sizes, aes(years, variables)) + geom_col()
+ggplot(sizes, aes(years, observations)) + geom_col()
+
+```
+
+The data set of interest should address the following questions about the National Student Performance Exam in the last 10 years:
+
+* 1. Is higher education in Brazil improving?
+* 2. Where Brazil have the best number in education? per área and also per courses.
+* 3. In relation to the past generation, is higher education improving?
+* 4. In what modalities of higher education in Brazil are improving?
+* 5. Which courses in which college are best rated?
+
+Once that data is loaded is possible to identify that each year the number of variables is different than others years. For our study based in the dataset and accordding with the documentation available, the set of variables to be used in this analysis are list bellow:
+
+```{r table1, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+# Variables Table 1
+tabl1 <- data.frame(
+        "Variables" = c("nu_ano" ,"cd_catad","cd_orgac","co_grupo","co_curso","co_regiao_habil","co_uf_habil", "co_munic_habil","nu_idade","tp_sexo","ano_fim_2g","ano_in_gra","QE_I13","QE_I14","nt_fg","nt_ce","nt_ger"),
+        "Description" = c("Year of testing","Administrative Category Code IES","Academic Organization Code IES","ENADE Course Code Group","ENADE Course Code","Brazil region","Brazilian State", "Brazilian City Code","Student Age","Gender","High School Finish Year","Upper Graduation Start Year","Question: What is your father's education level?","Question: What is your father's education level?","Gross test score of general graduation","Gross test score of the specific component","Gross test score")
+)
+
+kable(tabl1) %>%
+        add_header_above(c("Table 1: Interest variables, datasets from 2008 to 2009" = 2)) %>%
+        kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+```
+
+From 2010 until 2016 the interest variables change according with list bellow:
+
+```{r table2, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+# Variables Table 2
+tabl2 <- data.frame(
+        "Variables" = c("NU_ANO", "CO_CATEGAD", "CO_ORGACAD","CO_GRUPO","CO_CURSO","CO_REGIAO_CURSO","CO_UF_CURSO","CO_MUNIC_CURSO","NU_IDADE","TP_SEXO","ANO_FIM_2G","ANO_IN_GRAD","QE_I13", "QE_I14", "NT_FG", "NT_CE", "NT_GER"),
+        "Description" = c("Year of testing","Administrative Category Code IES","Academic Organization Code IES","ENADE course code group","ENADE Course Code","Brazil region","Brazilian State", "Brazilian City Code","Student Age","Gender","High School Finish Year","Upper Graduation Start Year","Question: What is your father's education level?","Question: What is your father's education level?","Gross test score of general graduation","Gross test score of the specific component","Gross test score")
+)
+
+kable(tabl2) %>%
+        add_header_above(c("Table 2: Interest variables, datasets from 2010 to 2016" = 2)) %>%
+        kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+
+```
+
+From 2017 until 2018 the interest variables change according with list bellow:
+
+```{r table3, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+# Variables Table 3
+tabl3 <- data.frame(
+        "Variables" = c("NU_ANO","CO_CATEGAD","CO_ORGACAD","CO_GRUPO","CO_CURSO","CO_REGIAO_CURSO","CO_UF_CURSO","CO_MUNIC_CURSO","CO_CURSO","NU_IDADE","TP_SEXO","ANO_FIM_EM","ANO_IN_GRAD","QE_I13","QE_I14","NT_FG","NT_CE","NT_GER"),
+        "Description" = c("Year of testing","Administrative Category Code IES","Academic Organization Code IES","ENADE course code group","ENADE course code subgroup","Brazil region","Brazilian State","Brazilian City Code","ENADE Course Code","Student Age","Gender","High School Finish Year","Upper Graduation Start Year","Question: What is your father's education level?","Question: What is your father's education level?","Gross test score of general graduation","Gross test score of the specific component","Gross test score")
+)
+
+kable(tabl3) %>%
+        add_header_above(c("Table 3: Interest variables, datasets from 2017 to 2018" = 2)) %>%
+        kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+```
+
+## 3.3 Extracting subset data and variable names convergence
+
+Based in the difference from the three previous tables, we are going to extract variables from datasets by year and convert to a set of variable names from 2008 to 2018.
+
+### 3.3.1 Identifying possible filters parameters.
+
+According with the dataset documentation, some parameters must be considering in filter in order to have cleaning data for analysis. These parameters are related to the presence of the student in the Tests. For this analysis is considering presence in all tests. These parameters are according with table bellow:
+
+```{r table4, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+# Filter Variables Table 4
+tabl4 <- data.frame(
+        "Variables" = c("tp_pres/TP_PRES","tp_pr_ger/TP_PR_GER","tp_pr_ob_fg/TP_PR_OB_FG","tp_pr_di_fg/TP_PR_DI_FG","tp_pr_ob_ce/TP_PR_OB_CE"), 
+        "Description" = c("Presence Type","Presence Type In Test","Presence Type In Test for General Formation in Objective part","Presence Type In Test for General Formation in Discursive part","Presence Type In Test for Specific Component in Objective part"),
+        "Value" = c("555 = Present", "555 = OK", "555 = OK", "555 = OK", "555 = OK")
+)
+
+kable(tabl4) %>%
+        add_header_above(c("Table 4: Filters from 2008 to 2018" = 3)) %>%
+        kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+
+```
+
+## 3.4 Subset data
+
+In this section the data will be filtered according to table 4 for all datasets. Then, only the variables of interest will be selected according with normalizing variable names and including all datasets in a single dataset.
+
+```{r CleaningData}
+### Filter and get interest variables ###
+mData2008Filter <- subset(mData2008, tp_pres == 555 | tp_pr_ger == 555 | tp_pr_ob_fg == 555 | tp_pr_di_fg == 555 | tp_pr_ob_ce == 555, select = c(nu_ano ,cd_catad, cd_orgac, co_grupo, co_curso, co_regiao_habil, co_uf_habil, co_munic_habil, nu_idade, tp_sexo, ano_fim_2g, ano_in_gra, QE_I13, QE_I14, nt_fg, nt_ce, nt_ger))
+mData2009Filter <- subset(mData2009, tp_pres == 555 | tp_pr_ger == 555 | tp_pr_ob_fg == 555 | tp_pr_di_fg == 555 | tp_pr_ob_ce == 555, select = c(nu_ano ,cd_catad, cd_orgac, co_grupo, co_curso, co_regiao_habil, co_uf_habil, co_munic_habil, nu_idade, tp_sexo, ano_fim_2g, ano_in_gra, QE_I13, QE_I14, nt_fg, nt_ce, nt_ger))
+
+mData2010Filter <- subset(mData2010, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO, CO_CATEGAD, CO_ORGACAD, CO_GRUPO, CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, CO_MUNIC_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_2G, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+mData2011Filter <- subset(mData2011, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO, CO_CATEGAD, CO_ORGACAD, CO_GRUPO, CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, CO_MUNIC_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_2G, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+mData2012Filter <- subset(mData2012, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO, CO_CATEGAD, CO_ORGACAD, CO_GRUPO, CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, CO_MUNIC_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_2G, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+mData2013Filter <- subset(mData2013, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO, CO_CATEGAD, CO_ORGACAD, CO_GRUPO, CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, CO_MUNIC_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_2G, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+mData2014Filter <- subset(mData2014, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO, CO_CATEGAD, CO_ORGACAD, CO_GRUPO, CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, CO_MUNIC_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_2G, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+mData2015Filter <- subset(mData2015, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO, CO_CATEGAD, CO_ORGACAD, CO_GRUPO, CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, CO_MUNIC_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_2G, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+mData2016Filter <- subset(mData2016, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO, CO_CATEGAD, CO_ORGACAD, CO_GRUPO, CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, CO_MUNIC_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_2G, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+
+
+mData2017Filter <- subset(mData2017, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO, CO_CATEGAD, CO_ORGACAD, CO_GRUPO, CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, CO_MUNIC_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_EM, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+mData2018Filter <- subset(mData2018, TP_PRES == 555 | TP_PR_GER == 555 | TP_PR_OB_FG == 555 | TP_PR_DI_FG == 555 | TP_PR_OB_CE == 555, select = c(NU_ANO, CO_CATEGAD, CO_ORGACAD, CO_GRUPO, CO_CURSO, CO_REGIAO_CURSO, CO_UF_CURSO, CO_MUNIC_CURSO, NU_IDADE, TP_SEXO, ANO_FIM_EM, ANO_IN_GRAD, QE_I13, QE_I14, NT_FG, NT_CE, NT_GER))
+
+### Binding rows for a UNIQUE DataSet ###
+mData <- rbind(mData2008Filter, mData2009Filter)
+
+### Change variable names according with year variables change from dataset (2010 to 2016) ###
+colnames(mData) <- c("NU_ANO", "CO_CATEGAD", "CO_ORGACAD", "CO_GRUPO", "CO_CURSO", "CO_REGIAO_CURSO", "CO_UF_CURSO", "CO_MUNIC_CURSO", "NU_IDADE", "TP_SEXO", "ANO_FIM_2G", "ANO_IN_GRAD", "QE_I13", "QE_I14", "NT_FG", "NT_CE", "NT_GER")
+mData <- rbind(mData, mData2010Filter)
+mData <- rbind(mData, mData2011Filter)
+mData <- rbind(mData, mData2012Filter)
+mData <- rbind(mData, mData2013Filter)
+mData <- rbind(mData, mData2014Filter)
+mData <- rbind(mData, mData2015Filter)
+mData <- rbind(mData, mData2016Filter)
+
+### Change variable names according with year variables change from dataset (2017 to 2018) ###
+colnames(mData) <- c("NU_ANO", "CO_CATEGAD", "CO_ORGACAD", "CO_GRUPO", "CO_CURSO", "CO_REGIAO_CURSO", "CO_UF_CURSO", "CO_MUNIC_CURSO", "NU_IDADE", "TP_SEXO", "ANO_FIM_EM", "ANO_IN_GRAD", "QE_I13", "QE_I14", "NT_FG", "NT_CE", "NT_GER")
+mData <- rbind(mData, mData2017Filter)
+mData <- rbind(mData, mData2018Filter)
+
+### Adjust Data ###
+mData$NU_ANO <- as.factor(mData$NU_ANO)
+mData$CO_REGIAO_CURSO <- as.factor(mData$CO_REGIAO_CURSO)
+mData$NT_FG <- as.numeric(sub(",", ".", mData$NT_FG, fixed = TRUE))
+mData$NT_CE <- as.numeric(sub(",", ".", mData$NT_CE, fixed = TRUE))
+mData$NT_GER <- as.numeric(sub(",", ".", mData$NT_GER, fixed = TRUE))
+mData$CO_MUNIC_CURSO <- as.numeric(mData$CO_MUNIC_CURSO)
+mData$CO_CURSO <- as.numeric(mData$CO_CURSO)
+
+mData$TP_SEXO[mData$TP_SEXO == "1"] <- "M"
+mData$TP_SEXO[mData$TP_SEXO == "2"] <- "F"
+mData$TP_SEXO <- as.factor(mData$TP_SEXO)
+
+mData$QE_I13 <- as.factor(mData$QE_I13)
+mData$QE_I14 <- as.factor(mData$QE_I14)
+
+### Remove NA's ###
+mData <- na.omit(mData)
+
+### Remove Duplicate Data ###
+
+
+```
+
+## 3.5 Merge and Subset Data
+
+This section will add to the tidy dataset useful variable information according with the numeric code loaded in the following variables: **CO_CATEGAD**, **CO_ORGACAD**, **CO_GRUPO**, **CO_CURSO**, **CO_REGIAO_CURSO**, **CO_UF_CURSO** and **CO_MUNIC_CURSO**. Also will be included geographic coordinate in order to identify cities position. As pre-requirement use **ref_** files available in [Enade Project](https://github.com/speedjuniorbr/ENADEProject) including files in the same directory.
+
+```{r SubsetData}
+## Merge Cities - City Name, State, Lat, Long and Alt
+cities <- readRDS("ref_cities_locations.rds")
+cities$CO_MUNIC_CURSO <- as.numeric(cities$CO_MUNIC_CURSO)
+
+mData$MUNICIPIO <- cities$MUNICIPIO[match(mData$CO_MUNIC_CURSO,cities$CO_MUNIC_CURSO)]
+mData$UF <- cities$UF[match(mData$CO_MUNIC_CURSO,cities$CO_MUNIC_CURSO)]
+mData$LONG <- cities$LONG[match(mData$CO_MUNIC_CURSO,cities$CO_MUNIC_CURSO)]
+mData$LAT <- cities$LAT[match(mData$CO_MUNIC_CURSO,cities$CO_MUNIC_CURSO)]
+mData$ALT <- cities$ALT[match(mData$CO_MUNIC_CURSO,cities$CO_MUNIC_CURSO)]
+
+## Merge Courses General Data (codes to understandable info)
+
+categ <- read.csv("ref_categoria.csv", sep = ";", header = TRUE)
+mData$CATEGAD <- categ$CATEGORIA[match(mData$CO_CATEGAD,categ$COD_CATEGAD)]
+
+grupo <- read.csv("ref_grupo.csv", sep = ";", header = TRUE)
+mData$GRUPO <- grupo$GRUPO[match(mData$CO_GRUPO,grupo$CO_GRUPO)]
+
+organizacao <- read.csv("ref_organizacao_academica.csv", sep = ";", header = TRUE)
+mData$ORGANIZACAO <- organizacao$ORGANIZACAO_ACADEMICA[match(mData$CO_ORGACAD,organizacao$CO_ORGACAD)]
+
+regiao <- read.csv("ref_regiao.csv", sep = ";", header = TRUE)
+mData$REGIAO_CURSO <- regiao$REGIAO_CURSO[match(mData$CO_REGIAO_CURSO,regiao$CO_REGIAO_CURSO)]
+
+cursos <- read_xls("ref_tabela_de_cursos.xls")
+mData$CURSO <- cursos$`Nome do Curso`[match(mData$CO_CURSO,cursos$`Código do Curso`)]
+
+
+## Get only Interested Variables
+df <- subset(mData, select = -c(CO_CATEGAD,CO_ORGACAD,CO_GRUPO,CO_CURSO,CO_MUNIC_CURSO, CO_UF_CURSO, CO_REGIAO_CURSO))
+
+df$UF <- as.factor(df$UF)
+
+
+## Generate Cleaned Dataset.
+saveRDS(df,"enade_2008_2018.rds")
+
+```
+
+## 3.6 Tidy Dataset
+
+As result the Tidy Dataset present bellow:
+
+```{r Result}
+summary(df)
+str(df)
+
+# Get variable types
+r <- as.data.frame(sapply(df,typeof))
+colnames(r) <- c("type")
+
+```
+
+```{r table5, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+# Filter Variables Table 4
+tabl5 <- data.frame(
+        "Variables" = colnames(df),
+        "Type" = r$type,
+        "Description" = c("Year of Test","Student Age","Gender", "High School Finish Year", "Upper Graduation Start Year","Question I 13 - What is your father’s education level? ","Question I 14 - What is your father’s education level?","Gross test score of general graduation", "Gross test score of the specific component", "Gross test score","City","State","Longitude", "Latitude", "Altitude","Administrative Category","ENADE course group","Academic Organization IES", "Brazilian Region", "Course")
+)
+
+kable(tabl5) %>%
+        add_header_above(c("Table 5: Result Dataset" = 3)) %>%
+        kable_styling(full_width = F) %>%
+        column_spec(1, bold=T, border_right = T)
+
+```
+
+
+# 4 Conclusion
+
+Using data cleaning method is possible to create a tidy dataset in order to address basic questions about the National Student Performance Exam in Brazil in the last 10 years.The tidy dataset **enade_2008_2018.rds** has no more than 45 Mb and 3712412 registers from ENADE Data.To perform section **3.5 Merge and Subset Data** is required to use **ref_** docs available in GitHub [Enade Project](https://github.com/speedjuniorbr/ENADEProject).The **ref_** docs it was created to generate a understandable reference for the dataset.
+
+The Next Steps will include:
+
+2. Brazilian High Education General Perspective - Part 2 - (Exploratory Analysis)
+3. Brazilian High Education General Perspective - Part 3 - (Data Models)
+4. Brazilian High Education General Perspective - Part 4 - (Data Product)
+
+
